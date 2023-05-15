@@ -1,0 +1,3 @@
+This readme is incomplete...
+
+To start, run `docker-compose up`
