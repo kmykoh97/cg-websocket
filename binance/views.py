@@ -40,7 +40,7 @@ def launch_ws_thread_for_orderbook(ticker_symbol):
     orderbook_manager = BinanceWebSocketApiManager()
     t = threading.Thread(target=cache_stream_data_from_stream_buffer_orderbook, args=[orderbook_manager, f"orderbook_{ticker_symbol}"], daemon=True)
     t.start()
-    orderbook_stream_id = orderbook_manager.create_stream("depth", [ticker_symbol])
+    orderbook_stream_id = orderbook_manager.create_stream("depth20", [ticker_symbol])
     time.sleep(1)  # to make sure every refresh there are result
 
 def index(request):
