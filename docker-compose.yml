@@ -11,7 +11,6 @@ services:
       - "80:8000"
     depends_on:
       - redis
-    restart: always
 
   redis:
     image: "redis:latest"
