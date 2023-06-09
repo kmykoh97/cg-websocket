@@ -58,9 +58,7 @@ def mini_tickers_bulk(request):
         if cached_result == "missing": continue
         tickers_response.append(cached_result)
 
-    response = JsonResponse(tickers_response, safe=False)
-    response.set_cookie('cg-ws-route-key', "mini_tickers")
-    return response
+    return JsonResponse(tickers_response, safe=False)
 
 def mini_ticker_single(request, ticker_symbol):
     cached_result = cache.get(ticker_symbol, "has expired")
@@ -69,9 +67,7 @@ def mini_ticker_single(request, ticker_symbol):
         launch_ws_thread_for_ticker()
         cached_result = cache.get(ticker_symbol)
     
-    response = JsonResponse(cached_result, safe=False)
-    response.set_cookie('cg-ws-route-key', "mini_tickers")
-    return response
+    return JsonResponse(cached_result, safe=False)
 
 def orderbook(request, ticker_symbol):
     cached_result = cache.get(f"orderbook_{ticker_symbol}", "has expired")
@@ -81,9 +77,7 @@ def orderbook(request, ticker_symbol):
         cached_result = cache.get(f"orderbook_{ticker_symbol}")
         # return HttpResponse("restarting websocket thread...")
 
-    response = JsonResponse(json.loads(cached_result))
-    response.set_cookie('cg-ws-route-key', f"orderbook_{ticker_symbol}")
-    return response
+    return JsonResponse(json.loads(cached_result))
 
 
 
