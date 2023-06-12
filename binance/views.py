@@ -5,6 +5,7 @@ from unicorn_binance_websocket_api.manager import BinanceWebSocketApiManager
 import json
 import threading
 import time
+from datetime import datetime
 
 def cache_stream_data_from_stream_buffer_ticker(websocket_api_manager):
     while True:
@@ -16,7 +17,7 @@ def cache_stream_data_from_stream_buffer_ticker(websocket_api_manager):
         else:
             json_array = json.loads(oldest_stream_data_from_stream_buffer)
             for item in json_array:
-                cache.set(item['s'], item, 30)
+                cache.set(f"ticker_{item['s']}", item, 30)
 
 def cache_stream_data_from_stream_buffer_orderbook(websocket_api_manager, cache_key):
     while True:
@@ -46,36 +47,51 @@ def launch_ws_thread_for_orderbook(ticker_symbol):
 def index(request):
     return HttpResponse("Hello world. You're at the binance index. Try /mini_tickers_bulk OR /mini_ticker_single/BTCUSDT OR /orderbook/BTCUSDT")
 
+def checkpoint_ticker_is_new(symbol):
+    determinant = cache.get(f"checkpoint_{symbol}", "404")
+    cache.set(f"checkpoint_{symbol}", datetime.now(), 60)
+
+    if determinant == "404": return True
+    return False
+
 def mini_tickers_bulk(request):
-    test_key = cache.get("BTCUSDT", "has expired")
-    if test_key == "has expired": launch_ws_thread_for_ticker()
+    ticker_is_new = checkpoint_ticker_is_new("ticker")
+    test_key = cache.get("ticker_BTCUSDT", "404")
+
+    if test_key == "404" and ticker_is_new:
+        launch_ws_thread_for_ticker()
+
     all_keys = cache.keys("*")
-    filtered_minitickers_keys = [x for x in all_keys if not x.startswith("orderbook_")]
+    filtered_minitickers_keys = [x for x in all_keys if x.startswith("ticker_")]
     tickers_response = []
 
     for k in filtered_minitickers_keys:
-        cached_result = cache.get(k, "missing")
-        if cached_result == "missing": continue
+        cached_result = cache.get(k, "404")
+        if cached_result == "404": continue
         tickers_response.append(cached_result)
 
     return JsonResponse(tickers_response, safe=False)
 
 def mini_ticker_single(request, ticker_symbol):
-    cached_result = cache.get(ticker_symbol, "has expired")
+    ticker_is_new = checkpoint_ticker_is_new("ticker")
+    cached_result = cache.get(f"ticker_{ticker_symbol}", "404")
 
-    if cached_result == "has expired":
+    if cached_result == "404" and ticker_is_new:
         launch_ws_thread_for_ticker()
-        cached_result = cache.get(ticker_symbol)
-    
+        cached_result = cache.get(f"ticker_{ticker_symbol}")
+
     return JsonResponse(cached_result, safe=False)
 
 def orderbook(request, ticker_symbol):
-    cached_result = cache.get(f"orderbook_{ticker_symbol}", "has expired")
-    
-    if cached_result == "has expired":
+    print("fafdasfasdf")
+    ticker_is_new = checkpoint_ticker_is_new(f"orderbook_{ticker_symbol}")
+    print("ticker_is_new")
+    print(ticker_is_new)
+    cached_result = cache.get(f"orderbook_{ticker_symbol}", "404")
+
+    if cached_result == "404" and ticker_is_new:
         launch_ws_thread_for_orderbook(ticker_symbol)
         cached_result = cache.get(f"orderbook_{ticker_symbol}")
-        # return HttpResponse("restarting websocket thread...")
 
     return JsonResponse(json.loads(cached_result))
 
