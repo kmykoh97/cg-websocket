@@ -83,10 +83,7 @@ def mini_ticker_single(request, ticker_symbol):
     return JsonResponse(cached_result, safe=False)
 
 def orderbook(request, ticker_symbol):
-    print("fafdasfasdf")
     ticker_is_new = checkpoint_ticker_is_new(f"orderbook_{ticker_symbol}")
-    print("ticker_is_new")
-    print(ticker_is_new)
     cached_result = cache.get(f"orderbook_{ticker_symbol}", "404")
 
     if cached_result == "404" and ticker_is_new:
