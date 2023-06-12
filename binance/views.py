@@ -16,13 +16,13 @@ def cache_stream_data_from_stream_buffer_ticker():
             websocket_api_manager.stop_manager_with_all_streams()
             break
         oldest_stream_data_from_stream_buffer = websocket_api_manager.pop_stream_data_from_stream_buffer()
+        cache.set("checkpoint_ticker", datetime.now(), 200)
         if oldest_stream_data_from_stream_buffer is False:
             time.sleep(5)
             if websocket_api_manager.pop_stream_data_from_stream_buffer() is False:
                 websocket_api_manager.stop_manager_with_all_streams()
                 break
         else:
-            cache.set("checkpoint_ticker", datetime.now(), 60)
             json_array = json.loads(oldest_stream_data_from_stream_buffer)
             for item in json_array:
                 cache.set(f"ticker_{item['s']}", item, 30)
@@ -37,13 +37,13 @@ def cache_stream_data_from_stream_buffer_orderbook(ticker_symbol, cache_key):
             websocket_api_manager.stop_manager_with_all_streams()
             break
         oldest_stream_data_from_stream_buffer = websocket_api_manager.pop_stream_data_from_stream_buffer()
+        cache.set(f"checkpoint_{cache_key}", datetime.now(), 200)
         if oldest_stream_data_from_stream_buffer is False:
             time.sleep(5)
             if websocket_api_manager.pop_stream_data_from_stream_buffer() is False:
                 websocket_api_manager.stop_manager_with_all_streams()
                 break
         else:
-            cache.set(f"checkpoint_{cache_key}", datetime.now(), 60)
             cache.set(cache_key, oldest_stream_data_from_stream_buffer, 30)
         time.sleep(3)
 
@@ -63,18 +63,14 @@ def checkpoint_ticker_is_new(symbol):
     determinant = cache.get(f"checkpoint_{symbol}", "404")
 
     if determinant == "404":
-        cache.set(f"checkpoint_{symbol}", datetime.now(), 60)
+        cache.set(f"checkpoint_{symbol}", datetime.now(), 100)
         return True
 
     return False
 
 def mini_tickers_bulk(request):
     ticker_is_new = checkpoint_ticker_is_new("ticker")
-    test_key = cache.get("ticker_BTCUSDT", "404")
-
-    if test_key == "404" and ticker_is_new:
-        launch_ws_thread_for_ticker()
-
+    if ticker_is_new: launch_ws_thread_for_ticker()
     all_keys = cache.keys("*")
     filtered_minitickers_keys = [x for x in all_keys if x.startswith("ticker_")]
     tickers_response = []
@@ -88,18 +84,14 @@ def mini_tickers_bulk(request):
 
 def mini_ticker_single(request, ticker_symbol):
     ticker_is_new = checkpoint_ticker_is_new("ticker")
-    cached_result = cache.get(f"ticker_{ticker_symbol}", "404")
-
-    if cached_result == "404" and ticker_is_new:
-        launch_ws_thread_for_ticker()
+    if ticker_is_new: launch_ws_thread_for_ticker()
+    cached_result = cache.get(f"ticker_{ticker_symbol}")
 
     return JsonResponse(cached_result, safe=False)
 
 def orderbook(request, ticker_symbol):
     ticker_is_new = checkpoint_ticker_is_new(f"orderbook_{ticker_symbol}")
-    cached_result = cache.get(f"orderbook_{ticker_symbol}", "404")
-
-    if cached_result == "404" and ticker_is_new:
-        launch_ws_thread_for_orderbook(ticker_symbol)
+    if ticker_is_new: launch_ws_thread_for_orderbook(ticker_symbol)
+    cached_result = cache.get(f"orderbook_{ticker_symbol}")
 
     return JsonResponse(json.loads(cached_result), safe=False)
