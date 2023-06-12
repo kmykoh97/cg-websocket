@@ -25,7 +25,7 @@ def cache_stream_data_from_stream_buffer_ticker():
         else:
             json_array = json.loads(oldest_stream_data_from_stream_buffer)
             for item in json_array:
-                cache.set(f"ticker_{item['s']}", item, 30)
+                cache.set(f"ticker_{item['s']}", item, 60)
         time.sleep(3)
 
 def cache_stream_data_from_stream_buffer_orderbook(ticker_symbol, cache_key):
@@ -44,7 +44,7 @@ def cache_stream_data_from_stream_buffer_orderbook(ticker_symbol, cache_key):
                 websocket_api_manager.stop_manager_with_all_streams()
                 break
         else:
-            cache.set(cache_key, oldest_stream_data_from_stream_buffer, 30)
+            cache.set(cache_key, oldest_stream_data_from_stream_buffer, 60)
         time.sleep(3)
 
 def launch_ws_thread_for_ticker():
