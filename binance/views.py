@@ -28,7 +28,6 @@ def cache_stream_data_from_stream_buffer_ticker():
                 cache.set(f"ticker_{item['s']}", item, 30)
         time.sleep(3)
 
-
 def cache_stream_data_from_stream_buffer_orderbook(ticker_symbol, cache_key):
     websocket_api_manager = BinanceWebSocketApiManager(stream_buffer_maxlen=5)
     orderbook_stream_id = websocket_api_manager.create_stream("depth20", [ticker_symbol])
@@ -52,7 +51,6 @@ def launch_ws_thread_for_ticker():
     t = threading.Thread(target=cache_stream_data_from_stream_buffer_ticker, daemon=True)
     t.start()
     
-
 def launch_ws_thread_for_orderbook(ticker_symbol):
     t = threading.Thread(target=cache_stream_data_from_stream_buffer_orderbook, args=[ticker_symbol, f"orderbook_{ticker_symbol}"], daemon=True)
     t.start()
