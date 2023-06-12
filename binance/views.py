@@ -7,14 +7,19 @@ import threading
 import time
 from datetime import datetime
 
-def cache_stream_data_from_stream_buffer_ticker(websocket_api_manager):
+def cache_stream_data_from_stream_buffer_ticker():
+    websocket_api_manager = BinanceWebSocketApiManager(stream_buffer_maxlen=5)
+    miniTicker_arr_stream_id = websocket_api_manager.create_stream("arr", "!miniTicker")
+
     while True:
         if websocket_api_manager.is_manager_stopping():
-            exit(0)
+            websocket_api_manager.stop_manager_with_all_streams()
+            break
         oldest_stream_data_from_stream_buffer = websocket_api_manager.pop_stream_data_from_stream_buffer()
         if oldest_stream_data_from_stream_buffer is False:
             time.sleep(5)
             if websocket_api_manager.pop_stream_data_from_stream_buffer() is False:
+                websocket_api_manager.stop_manager_with_all_streams()
                 break
         else:
             cache.set("checkpoint_ticker", datetime.now(), 60)
@@ -23,15 +28,20 @@ def cache_stream_data_from_stream_buffer_ticker(websocket_api_manager):
                 cache.set(f"ticker_{item['s']}", item, 30)
         time.sleep(3)
 
-def cache_stream_data_from_stream_buffer_orderbook(websocket_api_manager, cache_key):
+
+def cache_stream_data_from_stream_buffer_orderbook(ticker_symbol, cache_key):
+    websocket_api_manager = BinanceWebSocketApiManager(stream_buffer_maxlen=5)
+    orderbook_stream_id = websocket_api_manager.create_stream("depth20", [ticker_symbol])
+
     while True:
         if websocket_api_manager.is_manager_stopping():
-            exit(0)
+            websocket_api_manager.stop_manager_with_all_streams()
+            break
         oldest_stream_data_from_stream_buffer = websocket_api_manager.pop_stream_data_from_stream_buffer()
         if oldest_stream_data_from_stream_buffer is False:
             time.sleep(5)
             if websocket_api_manager.pop_stream_data_from_stream_buffer() is False:
-                print("exit")
+                websocket_api_manager.stop_manager_with_all_streams()
                 break
         else:
             cache.set(f"checkpoint_{cache_key}", datetime.now(), 60)
@@ -39,16 +49,13 @@ def cache_stream_data_from_stream_buffer_orderbook(websocket_api_manager, cache_
         time.sleep(3)
 
 def launch_ws_thread_for_ticker():
-    mini_ticker_manager = BinanceWebSocketApiManager()
-    t = threading.Thread(target=cache_stream_data_from_stream_buffer_ticker, args=[mini_ticker_manager], daemon=True)
+    t = threading.Thread(target=cache_stream_data_from_stream_buffer_ticker, daemon=True)
     t.start()
-    miniTicker_arr_stream_id = mini_ticker_manager.create_stream("arr", "!miniTicker")
+    
 
 def launch_ws_thread_for_orderbook(ticker_symbol):
-    orderbook_manager = BinanceWebSocketApiManager()
-    t = threading.Thread(target=cache_stream_data_from_stream_buffer_orderbook, args=[orderbook_manager, f"orderbook_{ticker_symbol}"], daemon=True)
+    t = threading.Thread(target=cache_stream_data_from_stream_buffer_orderbook, args=[ticker_symbol, f"orderbook_{ticker_symbol}"], daemon=True)
     t.start()
-    orderbook_stream_id = orderbook_manager.create_stream("depth20", [ticker_symbol])
 
 def index(request):
     launch_ws_thread_for_orderbook("ticker_symbol")
