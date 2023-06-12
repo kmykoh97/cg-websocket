@@ -15,7 +15,7 @@ def cache_stream_data_from_stream_buffer_ticker(websocket_api_manager):
         if oldest_stream_data_from_stream_buffer is False:
             time.sleep(5)
             if websocket_api_manager.pop_stream_data_from_stream_buffer() is False:
-                exit(0)
+                break
         else:
             cache.set("checkpoint_ticker", datetime.now(), 60)
             json_array = json.loads(oldest_stream_data_from_stream_buffer)
@@ -31,7 +31,8 @@ def cache_stream_data_from_stream_buffer_orderbook(websocket_api_manager, cache_
         if oldest_stream_data_from_stream_buffer is False:
             time.sleep(5)
             if websocket_api_manager.pop_stream_data_from_stream_buffer() is False:
-                exit(0)
+                print("exit")
+                break
         else:
             cache.set(f"checkpoint_{cache_key}", datetime.now(), 60)
             cache.set(cache_key, oldest_stream_data_from_stream_buffer, 30)
@@ -50,6 +51,7 @@ def launch_ws_thread_for_orderbook(ticker_symbol):
     orderbook_stream_id = orderbook_manager.create_stream("depth20", [ticker_symbol])
 
 def index(request):
+    launch_ws_thread_for_orderbook("ticker_symbol")
     return HttpResponse("Hello world. You're at the binance index. Try /mini_tickers_bulk OR /mini_ticker_single/BTCUSDT OR /orderbook/BTCUSDT")
 
 def checkpoint_ticker_is_new(symbol):
