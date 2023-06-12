@@ -21,7 +21,7 @@ def cache_stream_data_from_stream_buffer_ticker(websocket_api_manager):
             json_array = json.loads(oldest_stream_data_from_stream_buffer)
             for item in json_array:
                 cache.set(f"ticker_{item['s']}", item, 30)
-            time.sleep(3)
+        time.sleep(3)
 
 def cache_stream_data_from_stream_buffer_orderbook(websocket_api_manager, cache_key):
     while True:
@@ -36,7 +36,7 @@ def cache_stream_data_from_stream_buffer_orderbook(websocket_api_manager, cache_
         else:
             cache.set(f"checkpoint_{cache_key}", datetime.now(), 60)
             cache.set(cache_key, oldest_stream_data_from_stream_buffer, 30)
-            time.sleep(3)
+        time.sleep(3)
 
 def launch_ws_thread_for_ticker():
     mini_ticker_manager = BinanceWebSocketApiManager()
@@ -87,7 +87,6 @@ def mini_ticker_single(request, ticker_symbol):
 
     if cached_result == "404" and ticker_is_new:
         launch_ws_thread_for_ticker()
-        cached_result = cache.get(f"ticker_{ticker_symbol}")
 
     return JsonResponse(cached_result, safe=False)
 
@@ -97,6 +96,5 @@ def orderbook(request, ticker_symbol):
 
     if cached_result == "404" and ticker_is_new:
         launch_ws_thread_for_orderbook(ticker_symbol)
-        cached_result = cache.get(f"orderbook_{ticker_symbol}")
 
     return JsonResponse(json.loads(cached_result), safe=False)
