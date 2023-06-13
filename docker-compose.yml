@@ -9,7 +9,8 @@ services:
       - .:/code
     ports:
       - "80:8000"
-      # - "6379:6379"
+    env_file:
+      - .env
     depends_on:
       - redis
 
