@@ -16,7 +16,7 @@ def cache_stream_data_from_stream_buffer_ticker():
             websocket_api_manager.stop_manager_with_all_streams()
             break
         oldest_stream_data_from_stream_buffer = websocket_api_manager.pop_stream_data_from_stream_buffer()
-        cache.set("checkpoint_ticker", datetime.now(), 200)
+        cache.set("checkpoint_ticker", datetime.now(), 300)
         if oldest_stream_data_from_stream_buffer is False:
             time.sleep(5)
             if websocket_api_manager.pop_stream_data_from_stream_buffer() is False:
@@ -25,7 +25,7 @@ def cache_stream_data_from_stream_buffer_ticker():
         else:
             json_array = json.loads(oldest_stream_data_from_stream_buffer)
             for item in json_array:
-                cache.set(f"ticker_{item['s']}", item, 60)
+                cache.set(f"ticker_{item['s']}", item, 180)
         time.sleep(1)
 
 def cache_stream_data_from_stream_buffer_orderbook(ticker_symbol, cache_key):
@@ -37,14 +37,14 @@ def cache_stream_data_from_stream_buffer_orderbook(ticker_symbol, cache_key):
             websocket_api_manager.stop_manager_with_all_streams()
             break
         oldest_stream_data_from_stream_buffer = websocket_api_manager.pop_stream_data_from_stream_buffer()
-        cache.set(f"checkpoint_{cache_key}", datetime.now(), 200)
+        cache.set(f"checkpoint_{cache_key}", datetime.now(), 300)
         if oldest_stream_data_from_stream_buffer is False:
             time.sleep(5)
             if websocket_api_manager.pop_stream_data_from_stream_buffer() is False:
                 websocket_api_manager.stop_manager_with_all_streams()
                 break
         else:
-            cache.set(cache_key, oldest_stream_data_from_stream_buffer, 60)
+            cache.set(cache_key, oldest_stream_data_from_stream_buffer, 180)
         time.sleep(3)
 
 def launch_ws_thread_for_ticker():
@@ -63,7 +63,7 @@ def checkpoint_ticker_is_new(symbol):
     determinant = cache.get(f"checkpoint_{symbol}", "404")
 
     if determinant == "404":
-        cache.set(f"checkpoint_{symbol}", datetime.now(), 100)
+        cache.set(f"checkpoint_{symbol}", datetime.now(), 360)
         return True
 
     return False
