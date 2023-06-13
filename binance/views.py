@@ -8,7 +8,7 @@ import time
 from datetime import datetime
 
 def cache_stream_data_from_stream_buffer_ticker():
-    websocket_api_manager = BinanceWebSocketApiManager(stream_buffer_maxlen=5)
+    websocket_api_manager = BinanceWebSocketApiManager(stream_buffer_maxlen=30)
     miniTicker_arr_stream_id = websocket_api_manager.create_stream("arr", "!miniTicker")
 
     while True:
@@ -26,10 +26,10 @@ def cache_stream_data_from_stream_buffer_ticker():
             json_array = json.loads(oldest_stream_data_from_stream_buffer)
             for item in json_array:
                 cache.set(f"ticker_{item['s']}", item, 60)
-        time.sleep(3)
+        time.sleep(1)
 
 def cache_stream_data_from_stream_buffer_orderbook(ticker_symbol, cache_key):
-    websocket_api_manager = BinanceWebSocketApiManager(stream_buffer_maxlen=5)
+    websocket_api_manager = BinanceWebSocketApiManager(stream_buffer_maxlen=10)
     orderbook_stream_id = websocket_api_manager.create_stream("depth20", [ticker_symbol])
 
     while True:

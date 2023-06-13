@@ -9,6 +9,7 @@ services:
       - .:/code
     ports:
       - "80:8000"
+      # - "6379:6379"
     depends_on:
       - redis
 
