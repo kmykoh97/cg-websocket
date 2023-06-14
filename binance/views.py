@@ -55,7 +55,6 @@ def launch_ws_thread_for_orderbook(ticker_symbol):
     t.start()
 
 def index(request):
-    launch_ws_thread_for_orderbook("ticker_symbol")
     return HttpResponse("Hello world. You're at the binance index. Try /mini_tickers_bulk OR /mini_ticker_single/BTCUSDT OR /orderbook/BTCUSDT")
 
 def checkpoint_ticker_is_new(symbol):
