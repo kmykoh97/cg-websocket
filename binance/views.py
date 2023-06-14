@@ -49,10 +49,12 @@ def cache_stream_data_from_stream_buffer_orderbook(ticker_symbol, cache_key):
 def launch_ws_thread_for_ticker():
     t = threading.Thread(target=cache_stream_data_from_stream_buffer_ticker, daemon=True)
     t.start()
+    time.sleep(1)  # to make sure every refresh there is result
     
 def launch_ws_thread_for_orderbook(ticker_symbol):
     t = threading.Thread(target=cache_stream_data_from_stream_buffer_orderbook, args=[ticker_symbol, f"orderbook_{ticker_symbol}"], daemon=True)
     t.start()
+    time.sleep(1)  # to make sure every refresh there is result
 
 def index(request):
     return HttpResponse("Hello world. You're at the binance index. Try /mini_tickers_bulk OR /mini_ticker_single/BTCUSDT OR /orderbook/BTCUSDT")
