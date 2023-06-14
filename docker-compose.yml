@@ -7,8 +7,8 @@ services:
     container_name: cg_websocket
     volumes:
       - .:/code
-    ports:
-      - "80:8000"
+    expose:
+      - 8000
     env_file:
       - .env
   #   depends_on:
@@ -16,3 +16,11 @@ services:
 
   # redis:
   #   image: "redis:latest"
+  
+  nginx:
+    build: ./nginx
+    ports:
+      - 80:80
+    depends_on:
+      - web
+    restart: "on-failure"
