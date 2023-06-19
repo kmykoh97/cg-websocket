@@ -24,6 +24,7 @@ def cache_stream_data_from_stream_buffer_ticker():
             #     break
         else:
             json_array = json.loads(oldest_stream_data_from_stream_buffer)
+            cache.set("tickers_all", oldest_stream_data_from_stream_buffer)
             for item in json_array:
                 cache.set(f"ticker_{item['s']}", item, 180)
 
