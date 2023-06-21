@@ -18,10 +18,16 @@ def cache_stream_data_from_stream_buffer_ticker():
         oldest_stream_data_from_stream_buffer = websocket_api_manager.pop_stream_data_from_stream_buffer()
         cache.set("checkpoint_ticker", datetime.now(), 100)
         if oldest_stream_data_from_stream_buffer is False:
-            time.sleep(0.1)
-            # if websocket_api_manager.pop_stream_data_from_stream_buffer() is False:
-            #     websocket_api_manager.stop_manager_with_all_streams()
-            #     break
+            time.sleep(5)
+            oldest_stream_data_from_stream_buffer = websocket_api_manager.pop_stream_data_from_stream_buffer()
+            if oldest_stream_data_from_stream_buffer is False:
+                websocket_api_manager.stop_manager_with_all_streams()
+                break
+            else:
+                json_array = json.loads(oldest_stream_data_from_stream_buffer)
+                cache.set("tickers_all", oldest_stream_data_from_stream_buffer)
+                for item in json_array:
+                    cache.set(f"ticker_{item['s']}", item, 180)
         else:
             json_array = json.loads(oldest_stream_data_from_stream_buffer)
             cache.set("tickers_all", oldest_stream_data_from_stream_buffer)
@@ -40,7 +46,8 @@ def cache_stream_data_from_stream_buffer_orderbook(ticker_symbol, cache_key):
         cache.set(f"checkpoint_{cache_key}", datetime.now(), 300)
         if oldest_stream_data_from_stream_buffer is False:
             time.sleep(5)
-            if websocket_api_manager.pop_stream_data_from_stream_buffer() is False:
+            oldest_stream_data_from_stream_buffer = websocket_api_manager.pop_stream_data_from_stream_buffer()
+            if oldest_stream_data_from_stream_buffer is False:
                 websocket_api_manager.stop_manager_with_all_streams()
                 break
         else:
