@@ -16,7 +16,6 @@ def cache_stream_data_from_stream_buffer_ticker():
             websocket_api_manager.stop_manager_with_all_streams()
             break
         oldest_stream_data_from_stream_buffer = websocket_api_manager.pop_stream_data_from_stream_buffer()
-        cache.set("checkpoint_ticker", datetime.now(), 100)
         if oldest_stream_data_from_stream_buffer is False:
             time.sleep(5)
             oldest_stream_data_from_stream_buffer = websocket_api_manager.pop_stream_data_from_stream_buffer()
@@ -25,11 +24,13 @@ def cache_stream_data_from_stream_buffer_ticker():
                 break
             else:
                 json_array = json.loads(oldest_stream_data_from_stream_buffer)
+                cache.set("checkpoint_ticker", datetime.now(), 100)
                 cache.set("tickers_all", oldest_stream_data_from_stream_buffer)
                 for item in json_array:
                     cache.set(f"ticker_{item['s']}", item, 180)
         else:
             json_array = json.loads(oldest_stream_data_from_stream_buffer)
+            cache.set("checkpoint_ticker", datetime.now(), 100)
             cache.set("tickers_all", oldest_stream_data_from_stream_buffer)
             for item in json_array:
                 cache.set(f"ticker_{item['s']}", item, 180)
