@@ -66,6 +66,11 @@ def launch_ws_thread_for_orderbook(ticker_symbol):
     time.sleep(1)  # to make sure every refresh there is result
 
 def index(request):
+    test_key = cache.get("BTCUSDT", "404")
+
+    if test_key == "404":
+        return HttpResponseNotFound()
+        
     return HttpResponse("Hello world. You're at the binance index. Try /mini_tickers_bulk OR /mini_ticker_single/BTCUSDT OR /orderbook/BTCUSDT")
 
 def checkpoint_ticker_is_new(symbol):
