@@ -111,7 +111,7 @@ def launch_ws_thread_for_orderbook(ticker_symbol):
     time.sleep(1)  # to make sure every refresh there is result
 
 def index(request):
-    test_key = cache.get("BTCUSDT", "404")
+    test_key = cache.get("ticker_BTCUSDT", "404")
 
     if test_key == "404":
         return HttpResponseNotFound("cache miss")
