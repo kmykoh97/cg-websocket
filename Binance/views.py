@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseNotFound
 from django.core.cache import cache
 from unicorn_binance_websocket_api.manager import BinanceWebSocketApiManager
 import json
@@ -114,7 +114,7 @@ def index(request):
     test_key = cache.get("BTCUSDT", "404")
 
     if test_key == "404":
-        return HttpResponseNotFound()
+        return HttpResponseNotFound("cache miss")
         
     return HttpResponse("Hello world. You're at the binance index. Try /mini_tickers_bulk OR /mini_ticker_single/BTCUSDT OR /orderbook/BTCUSDT")
 
