@@ -6,6 +6,7 @@ import json
 import threading
 import time
 from datetime import datetime
+from .view_helpers.manage_local_orderbook_v2 import ManageLocalOrderBookV2
 
 def cache_stream_data_from_stream_buffer_ticker():
     websocket_api_manager = BinanceWebSocketApiManager(stream_buffer_maxlen=60)
@@ -35,7 +36,7 @@ def cache_stream_data_from_stream_buffer_ticker():
             for item in json_array:
                 cache.set(f"ticker_{item['s']}", item, 180)
 
-def cache_stream_data_from_stream_buffer_orderbook(ticker_symbol, cache_key):
+def cache_stream_data_from_stream_buffer_orderbook_v1(ticker_symbol, cache_key):
     websocket_api_manager = BinanceWebSocketApiManager(stream_buffer_maxlen=10)
     orderbook_stream_id = websocket_api_manager.create_stream("depth20", [ticker_symbol])
 
@@ -55,13 +56,57 @@ def cache_stream_data_from_stream_buffer_orderbook(ticker_symbol, cache_key):
             cache.set(cache_key, oldest_stream_data_from_stream_buffer, 180)
         time.sleep(3)
 
+
+def cache_stream_data_from_stream_buffer_orderbook_v2(ticker_symbol, cache_key): 
+    websocket_api_manager = BinanceWebSocketApiManager(stream_buffer_maxlen=60)
+    orderbook_stream_id = websocket_api_manager.create_stream("depth", [ticker_symbol])
+
+    while True:
+        if websocket_api_manager.is_manager_stopping():
+            websocket_api_manager.stop_manager_with_all_streams()
+            break
+        oldest_stream_data_from_stream_buffer = websocket_api_manager.pop_stream_data_from_stream_buffer()
+        cache.set(f"checkpoint_{cache_key}", datetime.now(), 700)
+        if oldest_stream_data_from_stream_buffer is False:
+            time.sleep(2)
+            oldest_stream_data_from_stream_buffer = websocket_api_manager.pop_stream_data_from_stream_buffer()
+            if oldest_stream_data_from_stream_buffer is False:
+                websocket_api_manager.stop_manager_with_all_streams()
+                break
+            else:
+                order_book = cache.get(cache_key, {
+                    "lastUpdateId": 0,
+                    "bids": [],
+                    "asks": []
+                })
+                new_json_array_from_stream_buffer = json.loads(
+                    oldest_stream_data_from_stream_buffer)
+                order_book = ManageLocalOrderBookV2(
+                    ticker_symbol, new_json_array_from_stream_buffer, order_book)
+                if order_book != None:
+                    cache.set(cache_key, order_book, 600)
+        else:
+            order_book = cache.get(cache_key, {
+                "lastUpdateId": 0,
+                "bids": [],
+                "asks": []
+            })
+            new_json_array_from_stream_buffer = json.loads(
+                oldest_stream_data_from_stream_buffer)
+            order_book = ManageLocalOrderBookV2(
+                ticker_symbol, new_json_array_from_stream_buffer, order_book)
+            if order_book != None:
+                cache.set(cache_key, order_book, 600)
+        time.sleep(0.1)
+
+
 def launch_ws_thread_for_ticker():
     t = threading.Thread(target=cache_stream_data_from_stream_buffer_ticker, daemon=True)
     t.start()
     time.sleep(1)  # to make sure every refresh there is result
     
 def launch_ws_thread_for_orderbook(ticker_symbol):
-    t = threading.Thread(target=cache_stream_data_from_stream_buffer_orderbook, args=[ticker_symbol, f"orderbook_{ticker_symbol}"], daemon=True)
+    t = threading.Thread(target=cache_stream_data_from_stream_buffer_orderbook_v2, args=[ticker_symbol, f"orderbook_{ticker_symbol}"], daemon=True)
     t.start()
     time.sleep(1)  # to make sure every refresh there is result
 
@@ -108,4 +153,4 @@ def orderbook(request, ticker_symbol):
     if ticker_is_new: launch_ws_thread_for_orderbook(ticker_symbol)
     cached_result = cache.get(f"orderbook_{ticker_symbol}")
 
-    return JsonResponse(json.loads(cached_result), safe=False)
+    return JsonResponse(cached_result, safe=False)
