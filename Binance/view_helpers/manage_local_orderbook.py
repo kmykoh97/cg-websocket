@@ -12,6 +12,7 @@ Instructions:
 from binance.spot import Spot as Client
 from binance.websocket.spot.websocket_client import SpotWebsocketClient
 from binance.lib.utils import config_logging
+import binance
 import os
 import logging
 import json
@@ -38,8 +39,10 @@ def get_snapshot():
     """
     Retrieve order book
     """
-
-    return client.depth(symbol, limit=1)
+    try:
+        return client.depth(symbol, limit=1)
+    except binance.error.ClientError:
+        return {"exception": "rate-limited"}
 
 
 def manage_order_book(side, update):
@@ -100,28 +103,18 @@ def message_handler(message):
 
         last_update_id = order_book['lastUpdateId']
 
-        print("detail message")
-        print(message)
-
-        print("update id")
-
-        print(message['U'])
-        print(last_update_id)
-        print(message['u'])
 
         if message['u'] <= last_update_id:
             return  # Not an update, wait for next message
         # U <= lastUpdateId+1 AND u >= lastUpdateId+1.
         if message['U'] <= last_update_id + 1 <= message['u']:
             order_book['lastUpdateId'] = message['u']
-            print("real update")
-            print(order_book['lastUpdateId'])
+
             process_updates(message)
         else:
             logging.info('Out of sync, re-syncing...')
             order_book = get_snapshot()
-            print("haoqi update")
-            print(order_book['lastUpdateId'])
+            # print(order_book['lastUpdateId'])
             print(order_book)
 
 
@@ -148,8 +141,8 @@ async def get_best_price():
         if order_book.get('lastUpdateId') > 0:
             print(
                 f'Best prices -> bid:{order_book["bids"][0][0]} , ask:{order_book["asks"][0][0]}')
-            # print(order_book["bids"])
-            # print(order_book["asks"])
+            print(order_book["bids"])
+            print(order_book["asks"])
         await asyncio.sleep(10)
 
 

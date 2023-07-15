@@ -12,6 +12,7 @@ Instructions:
 from binance.spot import Spot as Client
 from binance.websocket.spot.websocket_client import SpotWebsocketClient
 from binance.lib.utils import config_logging
+import binance
 import os
 import logging
 import json
@@ -23,10 +24,13 @@ def get_snapshot(symbol):
     """
     Retrieve order book
     """
-    
-    base_url = 'https://data-api.binance.vision'
-    client = Client(base_url=base_url)
-    return client.depth(symbol, limit=5000)
+
+    try:
+        base_url = 'https://data-api.binance.vision'
+        client = Client(base_url=base_url)
+        return client.depth(symbol, limit=5000)
+    except binance.error.ClientError:
+        return {"exception": "rate-limited"}
 
 
 def manage_order_book(side, update, order_book):
@@ -48,6 +52,7 @@ def manage_order_book(side, update, order_book):
                 order_book[side][i] = update
                 return
 
+
     # price not found: add new order
     if float(quantity) != 0:
         order_book[side].append(update)
@@ -62,7 +67,8 @@ def manage_order_book(side, update, order_book):
         if len(order_book[side]) > 5000:
             order_book[side].pop(len(order_book[side]) - 1)
 
-def message_handler_v2(message, order_book_old, symbol):
+
+def message_handler(message, order_book_old, symbol):
     """
     Syncs local order book with depthUpdate message's u (Final update ID in event) and U (First update ID in event).
     If synced, then the message will be processed.
@@ -90,5 +96,5 @@ def message_handler_v2(message, order_book_old, symbol):
 
 
 def ManageLocalOrderBookV2(ticker_symbol, message, order_book):
-    temp = message_handler_v2(message, order_book, ticker_symbol)
+    temp = message_handler(message, order_book, ticker_symbol)
     return temp
