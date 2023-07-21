@@ -83,11 +83,12 @@ def cache_stream_data_from_stream_buffer_orderbook_v2(ticker_symbol, cache_key):
                     oldest_stream_data_from_stream_buffer)
                 order_book = ManageLocalOrderBookV2(
                     ticker_symbol, new_json_array_from_stream_buffer, order_book)
-                if "exception" in order_book:
-                    websocket_api_manager.stop_manager_with_all_streams()
-                    break
                 if order_book != None:
-                    cache.set(cache_key, order_book, 600)
+                    if "exception" in order_book:
+                        websocket_api_manager.stop_manager_with_all_streams()
+                        break
+                    else:
+                        cache.set(cache_key, order_book, 600)
         else:
             order_book = cache.get(cache_key, {
                 "lastUpdateId": 0,
@@ -98,11 +99,12 @@ def cache_stream_data_from_stream_buffer_orderbook_v2(ticker_symbol, cache_key):
                 oldest_stream_data_from_stream_buffer)
             order_book = ManageLocalOrderBookV2(
                 ticker_symbol, new_json_array_from_stream_buffer, order_book)
-            if "exception" in order_book:
-                websocket_api_manager.stop_manager_with_all_streams()
-                break
             if order_book != None:
-                cache.set(cache_key, order_book, 600)
+                if "exception" in order_book:
+                    websocket_api_manager.stop_manager_with_all_streams()
+                    break
+                else:
+                    cache.set(cache_key, order_book, 600)
         time.sleep(0.1)
 
 
