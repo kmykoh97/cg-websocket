@@ -120,8 +120,9 @@ def launch_ws_thread_for_orderbook(ticker_symbol):
 
 def index(request):
     test_key = cache.get("ticker_BTCUSDT", "404")
+    test_key_2 = cache.get("checkpoint_ticker", "404")
 
-    if test_key == "404":
+    if test_key == "404" or test_key_2 == "404":
         return HttpResponseNotFound("cache miss")
         
     return HttpResponse("Hello world. You're at the binance index. Try /mini_tickers_bulk OR /mini_ticker_single/BTCUSDT OR /orderbook/BTCUSDT")
