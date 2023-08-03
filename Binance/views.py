@@ -28,13 +28,13 @@ def cache_stream_data_from_stream_buffer_ticker():
                 cache.set("checkpoint_ticker", datetime.now(), 100)
                 cache.set("tickers_all", oldest_stream_data_from_stream_buffer)
                 for item in json_array:
-                    cache.set(f"ticker_{item['s']}", item, 180)
+                    cache.set(f"ticker_{item['s']}", item, 7200)
         else:
             json_array = json.loads(oldest_stream_data_from_stream_buffer)
             cache.set("checkpoint_ticker", datetime.now(), 100)
             cache.set("tickers_all", oldest_stream_data_from_stream_buffer)
             for item in json_array:
-                cache.set(f"ticker_{item['s']}", item, 180)
+                cache.set(f"ticker_{item['s']}", item, 7200)
 
 def cache_stream_data_from_stream_buffer_orderbook_v1(ticker_symbol, cache_key):
     websocket_api_manager = BinanceWebSocketApiManager(stream_buffer_maxlen=10)
